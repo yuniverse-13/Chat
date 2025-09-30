@@ -1,0 +1,86 @@
+/* src/components/ChatRoom.css */
+
+/* --- Главное окно чата --- */
+.chat-room {
+  width: 100%;
+  max-width: 500px; /* Ограничиваем максимальную ширину */
+  height: 70vh; /* Высота в 70% от высоты экрана */
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+  border-radius: 12px; /* Закругленные углы */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Красивая тень */
+  overflow: hidden; /* Скрываем всё, что выходит за рамки закругленных углов */
+}
+
+/* --- Список сообщений --- */
+.message-list {
+  flex-grow: 1; /* Занимает всё доступное пространство */
+  overflow-y: auto; /* Полоса прокрутки появляется, только если сообщений много */
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px; /* Расстояние между сообщениями */
+}
+
+/* --- Отдельное сообщение (пузырь) --- */
+.message {
+  max-width: 75%; /* Сообщение не растягивается на всю ширину */
+  padding: 10px 15px;
+  border-radius: 18px; /* Делаем его похожим на пузырь */
+  background-color: #e9e9eb; /* Светло-серый фон для сообщений */
+  align-self: flex-start; /* Все сообщения по умолчанию "прижаты" влево */
+  word-wrap: break-word; /* Перенос длинных слов, чтобы они не вылезали за рамки */
+}
+
+/* Имя пользователя над сообщением */
+.message strong {
+  display: block; /* Имя пользователя будет на отдельной строке */
+  font-weight: 700;
+  font-size: 0.8em;
+  margin-bottom: 4px;
+  color: #65676b; /* Цвет имени пользователя */
+}
+
+
+/* --- Поле для ввода сообщения --- */
+.message-input {
+  display: flex;
+  padding: 15px;
+  border-top: 1px solid #e0e0e0;
+  background-color: #f7f7f7;
+}
+
+/* Поле ввода текста */
+.message-input input {
+  flex-grow: 1; /* Занимает всё доступное место, отодвигая кнопку */
+  border: none;
+  padding: 10px 15px;
+  border-radius: 20px; /* Делаем его закругленным */
+  background-color: #e9e9eb;
+  font-size: 1rem;
+  margin-right: 10px;
+}
+
+/* Убираем стандартную рамку при клике на поле ввода */
+.message-input input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #007bff; /* И добавляем свою красивую рамку */
+}
+
+/* Кнопка "Отправить" */
+.message-input button {
+  border: none;
+  background-color: #007bff; /* Приятный синий цвет */
+  color: white;
+  font-weight: bold;
+  padding: 10px 20px;
+  border-radius: 20px;
+  cursor: pointer; /* Курсор в виде руки при наведении */
+  transition: background-color 0.2s ease; /* Плавный переход цвета при наведении */
+}
+
+/* Эффект при наведении на кнопку */
+.message-input button:hover {
+  background-color: #0056b3; /* Более темный синий */
+}
