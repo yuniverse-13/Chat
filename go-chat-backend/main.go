@@ -1,4 +1,3 @@
-// go-chat-backend/main.go
 package main
 
 import (
@@ -8,57 +7,125 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// upgrader "повышает" обычное HTTP-соединение до постоянного WebSocket-соединения.
+type Client struct {
+	hub  *Hub
+	conn *websocket.Conn
+	send chan []byte
+}
+
+type Hub struct {
+	clients    map[*Client]bool
+	broadcast  chan []byte
+	register   chan *Client
+	unregister chan *Client
+}
+
+func newHub() *Hub {
+	return &Hub{
+		broadcast:  make(chan []byte),
+		register:   make(chan *Client),
+		unregister: make(chan *Client),
+		clients:    make(map[*Client]bool),
+	}
+}
+
+func (h *Hub) run() {
+	for {
+		select {
+		case client := <-h.register:
+			h.clients[client] = true
+			log.Println("Новый клиент зарегистрирован")
+
+		case client := <-h.unregister:
+			if _, ok := h.clients[client]; ok {
+				delete(h.clients, client)
+				close(client.send)
+				log.Println("Клиент отключился")
+			}
+
+		case message := <-h.broadcast:
+			for client := range h.clients {
+				select {
+				case client.send <- message:
+				default:
+					close(client.send)
+					delete(h.clients, client)
+				}
+			}
+		}
+	}
+}
+
 var upgrader = websocket.Upgrader{
-	// Эта функция определяет, разрешено ли соединение с данного источника (origin).
-	// Для разработки мы временно разрешаем все подключения.
 	CheckOrigin: func(r *http.Request) bool {
 		return true
 	},
 }
 
-// handleConnections будет вызываться для каждого нового клиента, подключившегося по WebSocket.
-func handleConnections(w http.ResponseWriter, r *http.Request) {
-	// Повышаем HTTP-запрос до WebSocket.
-	ws, err := upgrader.Upgrade(w, r, nil)
+func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
-	// Важно закрыть соединение, когда клиент отключается.
-	defer ws.Close()
+	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
+	client.hub.register <- client
 
 	log.Println("Клиент успешно подключился!")
 
-	// Бесконечный цикл для чтения сообщений от клиента.
+	go client.writePump()
+	go client.readPump()
+}
+
+func (c *Client) readPump() {
+	defer func() {
+		c.hub.unregister <- c
+		c.conn.Close()
+	}()
 	for {
-		// Читаем сообщение. ReadMessage блокирует выполнение, пока не придет сообщение.
-		messageType, message, err := ws.ReadMessage()
+		_, message, err := c.conn.ReadMessage()
 		if err != nil {
-			log.Printf("Ошибка чтения сообщения: %v", err)
-			break // Выходим из цикла, если клиент отсоединился.
-		}
-
-		// Выводим полученное сообщение в консоль сервера.
-		log.Printf("Получено сообщение: %s", message)
-
-		// Отправляем то же самое сообщение обратно клиенту (Эхо-сервер).
-		err = ws.WriteMessage(messageType, message)
-		if err != nil {
-			log.Printf("Ошибка отправки сообщения: %v", err)
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				log.Printf("error: %v", err)
+			}
 			break
 		}
+		log.Printf("Получено сообщение от клиента: %s", message)
+		c.hub.broadcast <- message
 	}
 }
 
+func (c *Client) writePump() {
+	defer func() {
+		c.conn.Close()
+	}()
+
+	for message := range c.send {
+		w, err := c.conn.NextWriter(websocket.TextMessage)
+		if err != nil {
+			return
+		}
+
+		if _, err := w.Write(message); err != nil {
+			return
+		}
+
+		if err := w.Close(); err != nil {
+			return
+		}
+	}
+
+	c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+}
+
 func main() {
-	// Создаем простой файловый сервер для статики (пока не используется, но может пригодиться).
-	fs := http.FileServer(http.Dir("../public"))
-	http.Handle("/", fs)
+	hub := newHub()
+	go hub.run()
 
-	// Регистрируем наш обработчик для WebSocket-соединений по пути "/ws".
-	http.HandleFunc("/ws", handleConnections)
+	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		serveWs(hub, w, r)
+	})
 
-	// Запускаем HTTP-сервер на порту 8080.
 	log.Println("HTTP-сервер запущен на http://localhost:8080")
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {

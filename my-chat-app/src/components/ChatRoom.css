@@ -1,49 +1,43 @@
-/* src/components/ChatRoom.css */
 
-/* --- Главное окно чата --- */
 .chat-room {
   width: 100%;
-  max-width: 500px; /* Ограничиваем максимальную ширину */
-  height: 70vh; /* Высота в 70% от высоты экрана */
+  max-width: 500px;
+  height: 70vh;
   display: flex;
   flex-direction: column;
   background-color: #ffffff;
-  border-radius: 12px; /* Закругленные углы */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Красивая тень */
-  overflow: hidden; /* Скрываем всё, что выходит за рамки закругленных углов */
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
-/* --- Список сообщений --- */
 .message-list {
-  flex-grow: 1; /* Занимает всё доступное пространство */
-  overflow-y: auto; /* Полоса прокрутки появляется, только если сообщений много */
+  flex-grow: 1;
+  overflow-y: auto;
   padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 12px; /* Расстояние между сообщениями */
+  gap: 12px;
 }
 
-/* --- Отдельное сообщение (пузырь) --- */
 .message {
-  max-width: 75%; /* Сообщение не растягивается на всю ширину */
+  max-width: 75%;
   padding: 10px 15px;
-  border-radius: 18px; /* Делаем его похожим на пузырь */
-  background-color: #e9e9eb; /* Светло-серый фон для сообщений */
-  align-self: flex-start; /* Все сообщения по умолчанию "прижаты" влево */
-  word-wrap: break-word; /* Перенос длинных слов, чтобы они не вылезали за рамки */
+  border-radius: 18px;
+  background-color: #e9e9eb;
+  align-self: flex-start;
+  word-wrap: break-word;
 }
 
-/* Имя пользователя над сообщением */
 .message strong {
-  display: block; /* Имя пользователя будет на отдельной строке */
+  display: block;
   font-weight: 700;
   font-size: 0.8em;
   margin-bottom: 4px;
-  color: #65676b; /* Цвет имени пользователя */
+  color: #65676b;
 }
 
 
-/* --- Поле для ввода сообщения --- */
 .message-input {
   display: flex;
   padding: 15px;
@@ -51,36 +45,44 @@
   background-color: #f7f7f7;
 }
 
-/* Поле ввода текста */
 .message-input input {
-  flex-grow: 1; /* Занимает всё доступное место, отодвигая кнопку */
+  flex-grow: 1;
   border: none;
   padding: 10px 15px;
-  border-radius: 20px; /* Делаем его закругленным */
+  border-radius: 20px;
   background-color: #e9e9eb;
   font-size: 1rem;
   margin-right: 10px;
 }
 
-/* Убираем стандартную рамку при клике на поле ввода */
 .message-input input:focus {
   outline: none;
-  box-shadow: 0 0 0 2px #007bff; /* И добавляем свою красивую рамку */
+  box-shadow: 0 0 0 2px #007bff;
 }
 
-/* Кнопка "Отправить" */
 .message-input button {
   border: none;
-  background-color: #007bff; /* Приятный синий цвет */
+  background-color: #007bff;
   color: white;
   font-weight: bold;
   padding: 10px 20px;
   border-radius: 20px;
-  cursor: pointer; /* Курсор в виде руки при наведении */
-  transition: background-color 0.2s ease; /* Плавный переход цвета при наведении */
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
-/* Эффект при наведении на кнопку */
 .message-input button:hover {
-  background-color: #0056b3; /* Более темный синий */
+  background-color: #0056b3;
+}
+
+.message.current-user {
+  align-self: flex-end; 
+
+  background-color: #007bff;
+
+  color: white;
+}
+
+.message.current-user strong {
+    display: none;
 }

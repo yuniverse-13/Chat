@@ -1,4 +1,3 @@
-// src/components/ChatRoom.js
 import React, { useState, useEffect, useRef } from "react";
 import './ChatRoom.css';
 
@@ -6,44 +5,36 @@ const ChatRoom = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   
-  // useRef будет хранить наш WebSocket объект между рендерами.
+  const [currentUser] = useState(() => "User_" + Math.floor(Math.random() * 1000));
+
   const socket = useRef(null);
 
   useEffect(() => {
-    // Устанавливаем соединение при монтировании компонента.
     socket.current = new WebSocket('ws://localhost:8080/ws');
 
-    socket.current.onopen = () => {
-      console.log('WebSocket соединение установлено.');
-    };
+    socket.current.onopen = () => console.log('WebSocket соединение установлено.');
+    socket.current.onerror = (error) => console.error('WebSocket ошибка:', error);
+    socket.current.onclose = () => console.log('WebSocket соединение закрыто.');
 
     socket.current.onmessage = (event) => {
-      // Пока что сервер отправляет простые строки, а не JSON.
-      // Создадим объект сообщения на стороне клиента для отображения.
-      const receivedMessage = {
-          id: Date.now(), // Генерируем временный ID
-          text: event.data,
-          user: 'Server Echo' // Указываем, что это эхо от сервера
-      };
+      const receivedMessage = JSON.parse(event.data);
       setMessages(prevMessages => [...prevMessages, receivedMessage]);
     };
 
-    socket.current.onerror = (error) => {
-      console.error('WebSocket ошибка:', error);
-    };
-
-    // Функция очистки, которая будет вызвана при размонтировании компонента.
     return () => {
-      console.log('WebSocket соединение закрыто.');
       socket.current.close();
     };
-  }, []); // Пустой массив зависимостей гарантирует, что эффект выполнится только один раз.
+  }, []);
 
   const handleSendMessage = () => {
-    // Проверяем, что сообщение не пустое и сокет готов к работе.
     if (newMessage.trim() !== '' && socket.current && socket.current.readyState === WebSocket.OPEN) {
-      // Отправляем текст сообщения на сервер.
-      socket.current.send(newMessage);
+      const messageObject = {
+        id: Date.now(),
+        user: currentUser,
+        text: newMessage,
+      };
+
+      socket.current.send(JSON.stringify(messageObject));
       setNewMessage('');
     }
   };
@@ -51,11 +42,17 @@ const ChatRoom = () => {
   return (
     <div className="chat-room">
       <div className="message-list">
-        {messages.map(msg => (
-          <div key={msg.id} className="message">
-            <strong>{msg.user}:</strong> {msg.text}
-          </div>
-        ))}
+        {messages.map(msg => {
+          const isCurrentUser = msg.user === currentUser;
+          return (
+            <div 
+              key={msg.id} 
+              className={`message ${isCurrentUser ? 'current-user' : ''}`}
+            >
+              <strong>{msg.user}:</strong> {msg.text}
+            </div>
+          );
+        })}
       </div>
       <div className="message-input">
         <input
@@ -63,7 +60,6 @@ const ChatRoom = () => {
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           placeholder="Введите сообщение..."
-          // Добавим отправку по нажатию Enter для удобства
           onKeyPress={(event) => {
             if (event.key === 'Enter') {
               handleSendMessage();
