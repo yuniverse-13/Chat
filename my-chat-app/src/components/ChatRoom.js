@@ -3,10 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import './ChatRoom.css';
 
 const ChatRoom = () => {
-  const [messages, setMessages] = useState([
-    { id: 1, text: 'Привет!', user: 'Enver' },
-    { id: 2, text: 'Привет, как дела?', user: 'Yun' },
-  ]);
+  const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   
   // useRef будет хранить наш WebSocket объект между рендерами.
